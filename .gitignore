@@ -62,4 +62,4 @@ htmlcov/
 *.bak
 *.backup
 *.tmp
-extraction_results.json
+extraction_results.jsonbiap-client-node-js/

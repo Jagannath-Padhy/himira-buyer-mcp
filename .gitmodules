@@ -1,0 +1,3 @@
+[submodule "himira_vector_db"]
+	path = himira_vector_db
+	url = git@github.com:Jagannath-Padhy/himira-vector-db.git

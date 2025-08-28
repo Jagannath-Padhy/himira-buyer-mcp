@@ -25,58 +25,82 @@ A complete ONDC (Open Network for Digital Commerce) shopping system featuring an
 
 ### Prerequisites
 - Docker & Docker Compose
-- Python 3.9+
+- Python 3.9+ (optional)
 - API Keys: Himira (WIL_API_KEY) and Google Gemini
 
-### Automated Deployment
+### 🎯 One-Command Installation (Recommended)
 
 ```bash
-# Run the deployment script
-./deploy.sh
+# Clone and run automated installer
+git clone https://github.com/Jagannath-Padhy/himira-buyer-mcp.git
+cd himira-buyer-mcp
+./install.sh
 
-# This will:
-# 1. Check prerequisites
-# 2. Set up environment files
+# The installer will:
+# 1. Check system prerequisites
+# 2. Set up API keys interactively
 # 3. Deploy all services with Docker
-# 4. Initialize vector database
-# 5. Configure MCP server
+# 4. Initialize vector database with products
+# 5. Generate Claude Desktop configuration
+# 6. Validate system functionality
 ```
 
-### Manual Deployment
+### ⚡ Quick Manual Setup
 
 ```bash
-# Start all services
+# 1. Clone with submodules
+git clone --recurse-submodules git@github.com:Jagannath-Padhy/himira-buyer-mcp.git
+cd himira-buyer-mcp
+
+# 2. Configure environment (single .env file!)
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY (Himira API key included)
+
+# 3. Start all services
 docker-compose -f docker-compose.unified.yml up -d
 
-# Initialize vector database
-docker exec himira-etl python -m etl.pipeline --mode full
+# 4. Vector database populates automatically!
+# Wait ~2 minutes for ETL to complete, then test:
+python test_system.py
+```
 
-# Check service health
-docker-compose -f docker-compose.unified.yml ps
+### 🔍 System Validation
+
+```bash
+# Quick health check
+python test_system.py
+
+# Comprehensive validation
+python validate_system.py
 ```
 
 ## 📚 Documentation
 
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide
+- **[FRESH_SYSTEM_SETUP.md](FRESH_SYSTEM_SETUP.md)** - Complete fresh system setup guide  
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment reference guide
 - **[ondc-shopping-mcp/README.md](ondc-shopping-mcp/README.md)** - MCP server documentation
 - **[himira_vector_db/README.md](himira_vector_db/README.md)** - Vector database documentation
 
 ## 🔧 Configuration
 
-### MCP Server Configuration
-Edit `ondc-shopping-mcp/.env`:
+### Single Configuration File
+Edit `.env` in the root directory:
 ```
-BACKEND_ENDPOINT=https://hp-buyer-backend-preprod.himira.co.in/clientApis
-WIL_API_KEY=your-api-key
-VECTOR_SEARCH_ENABLED=true
-```
+# Only GEMINI_API_KEY needs to be added - everything else has defaults
+HIMIRA_API_KEY=aPzSpx0rksO96PhGGNKRgfAay0vUbZ  # Pre-configured
+WIL_API_KEY=aPzSpx0rksO96PhGGNKRgfAay0vUbZ      # Pre-configured
+GEMINI_API_KEY=your_gemini_api_key_here          # ADD THIS
 
-### Vector Database Configuration
-Edit `himira_vector_db/.env`:
-```
-HIMIRA_BACKEND_ENDPOINT=https://hp-buyer-backend-preprod.himira.co.in/clientApis
-HIMIRA_API_KEY=your-api-key
-GEMINI_API_KEY=your-gemini-key
+# Backend endpoints (pre-configured)
+BACKEND_ENDPOINT=https://hp-buyer-backend-preprod.himira.co.in/clientApis
+HIMIRA_BACKEND_URL=https://hp-buyer-backend-preprod.himira.co.in/clientApis
+
+# Vector search (pre-configured)
+VECTOR_SEARCH_ENABLED=true
+QDRANT_HOST=qdrant
+QDRANT_PORT=6333
+QDRANT_COLLECTION=ondc_products
+VECTOR_SIMILARITY_THRESHOLD=0.3
 ```
 
 ## 🌐 Architecture
@@ -131,7 +155,48 @@ docker-compose -f docker-compose.unified.yml down
 ## 📊 Monitoring
 
 - **Qdrant Dashboard**: http://localhost:6333/dashboard
-- **Logs**: Check `ondc-shopping-mcp/logs/` and `himira_vector_db/logs/`
+- **System Health**: `python test_system.py`
+- **Logs**: `docker-compose -f docker-compose.unified.yml logs -f`
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| "container himira-qdrant is unhealthy" | Run `./debug_health_check.sh` or `docker restart himira-qdrant` |
+| Services won't start | `docker ps` to check Docker, restart Docker Desktop |
+| Vector search not working | Check API keys, restart: `docker-compose restart` |
+| No products found | Run ETL: `docker exec himira-etl python -m etl.pipeline --action full` |
+| Claude can't connect | Verify MCP config, restart Claude Desktop completely |
+
+### Quick Fixes
+```bash
+# Restart all services
+docker-compose -f docker-compose.unified.yml restart
+
+# Fix Qdrant health check issues
+./debug_health_check.sh
+
+# Check service logs
+docker logs ondc-mcp-server --tail 50
+docker logs himira-qdrant --tail 50
+
+# Clean restart (removes volumes)
+docker-compose -f docker-compose.unified.yml down -v
+docker-compose -f docker-compose.unified.yml up -d
+
+# Run system validation
+python validate_system.py
+```
+
+### Health Check Issues
+If you see "container himira-qdrant is unhealthy":
+
+1. **Quick fix**: `docker restart himira-qdrant`
+2. **Debug**: `./debug_health_check.sh` 
+3. **Check endpoint**: Verify `curl http://localhost:6333/` returns HTTP 200
+4. **Timing**: Wait 30+ seconds for health check to stabilize
 
 ## 🤝 Contributing
 
