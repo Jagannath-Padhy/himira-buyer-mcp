@@ -1,4 +1,4 @@
-# Claude Desktop Setup for ONDC Shopping MCP
+# MCP Client Setup for ONDC Shopping MCP
 
 ## Quick Setup
 
@@ -7,8 +7,8 @@
    docker-compose -f docker-compose.unified.yml up -d
    ```
 
-2. **Update Claude Desktop config**:
-   Edit `/Users/jagannath/Library/Application Support/Claude/claude_desktop_config.json`:
+2. **Update your MCP client config**:
+   Example for Claude Desktop, edit `/Users/jagannath/Library/Application Support/Claude/claude_desktop_config.json`:
    
    ```json
    {
@@ -29,9 +29,9 @@
    }
    ```
 
-3. **Restart Claude Desktop** completely
+3. **Restart your MCP client** completely
 
-4. **Test in Claude**: 
+4. **Test with your AI assistant**: 
    - "search for laptops"
    - "find me some snacks"
    - "what categories are available?"
@@ -44,7 +44,7 @@ The MCP server runs inside a Docker container where it has:
 - ✅ Proper environment variables
 - ✅ 172+ products loaded and ready
 
-Claude Desktop connects via `docker exec -i` to the running container, bridging the host system to the containerized MCP server.
+The MCP client connects via `docker exec -i` to the running container, bridging the host system to the containerized MCP server.
 
 ## Verification
 
@@ -65,9 +65,9 @@ Should show:
 - 172+ products in database  
 - MCP server starts and initializes successfully
 
-## Available Tools in Claude
+## Available Tools
 
-Once connected, you'll have access to:
+Once connected, your AI assistant will have access to:
 - **search_products**: Find products by name, category, or description
 - **get_categories**: List all available product categories
 - **add_to_cart**: Add items to shopping cart
@@ -77,8 +77,8 @@ Once connected, you'll have access to:
 
 ## Troubleshooting
 
-If Claude Desktop shows "Extension ondc-shopping not found":
+If your MCP client shows "Extension ondc-shopping not found":
 1. Ensure all containers are running: `docker-compose -f docker-compose.unified.yml ps`
-2. Restart Claude Desktop completely (not just refresh)
+2. Restart your MCP client completely
 3. Check container logs: `docker logs ondc-mcp-server`
 4. Verify config file syntax is valid JSON
