@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Data and cache
+*.db
+*.sqlite
+*.sqlite3
+cache/
+temp/
+tmp/
+
+# Vector database storage
+qdrant_data/
+
+# Session data
+sessions/
+*.session
+
+# Exclude biap-client-node-js directory
+biap-client-node-js/
+
+# Docker volumes
+docker_volumes/
+
+# Test outputs
+coverage/
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Misc
+*.bak
+*.backup
+*.tmp
+extraction_results.json

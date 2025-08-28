@@ -1,0 +1,88 @@
+# Unified Docker Compose for ONDC Shopping MCP + Vector Database
+# This file orchestrates both the MCP server and vector database services
+
+version: '3.8'
+
+services:
+  # Vector Database (Qdrant)
+  qdrant:
+    image: qdrant/qdrant:v1.7.0
+    container_name: himira-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+      - ./himira_vector_db/docker/qdrant-config:/qdrant/config
+    environment:
+      - QDRANT__LOG_LEVEL=INFO
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ondc-network
+
+  # ETL Service for Vector Database
+  etl:
+    build:
+      context: ./himira_vector_db
+      dockerfile: docker/Dockerfile.etl
+    container_name: himira-etl
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+    env_file:
+      - ./himira_vector_db/.env
+    volumes:
+      - ./himira_vector_db/config:/app/config
+      - ./himira_vector_db/logs:/app/logs
+    networks:
+      - ondc-network
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do python -m etl.pipeline --action full; sleep 7200; done"]
+
+  # MCP Server
+  mcp-server:
+    build:
+      context: ./ondc-shopping-mcp
+      dockerfile: Dockerfile
+    container_name: ondc-mcp-server
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    environment:
+      - VECTOR_SEARCH_ENABLED=true
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION=ondc_products
+      - VECTOR_SIMILARITY_THRESHOLD=0.4
+    env_file:
+      - ./ondc-shopping-mcp/.env
+    volumes:
+      - ./ondc-shopping-mcp/logs:/app/logs
+      - ~/.ondc-mcp/sessions:/app/sessions
+    ports:
+      - "8080:8080"  # If MCP server exposes an HTTP API
+    networks:
+      - ondc-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    command: ["python", "run_mcp_server.py"]
+
+
+networks:
+  ondc-network:
+    driver: bridge
+    name: ondc-network
+
+volumes:
+  qdrant_data:
